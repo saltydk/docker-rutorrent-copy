@@ -1,0 +1,30 @@
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract RUTORRENT_VERSION from Dockerfile
+        id: rutorrent_version
+        run: |
+          echo "RUTORRENT_VERSION=$(grep 'ARG RUTORRENT_VERSION=' Dockerfile | sed 's/ARG RUTORRENT_VERSION=//')" >> $GITHUB_ENV
+
+      - name: Kaniko build
+        uses: aevea/action-kaniko@master
+        with:
+          image: saltydk/rutorrent
+          tag: ${{ env.RUTORRENT_VERSION }}
+          tag_with_latest: true
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          cache: true
+          cache_registry: saltydk/cache
+          debug: true
+          #skip_unchanged_digest: true
